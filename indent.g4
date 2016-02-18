@@ -2,87 +2,158 @@ grammar indent;
 
 r: program;
 
-program : 'program' IDENT ';' declarations compoundstatement
+program :  programheader declarations (SPACE)? compoundstatement 
 		{
 			// indent declarations
-			System.out.println("program " + $IDENT.text + ";");
+			System.out.println($programheader.text);
 			ArrayList<String> lines = $declarations.lines;
+			for (int i = 0; i < lines.size(); i++) {
+				lines.set(i, "\t" + lines.get(i));
+			}
 			lines.addAll($compoundstatement.lines);
 			for (int i = 0; i < lines.size(); i++) {
 				System.out.println(lines.get(i));
 			}
 		};
 
+programheader : 'program' (SPACE)? IDENT (SPACE)? ';';
+
 declarations returns [ArrayList<String> lines]
                 @init { $lines = new ArrayList<String>();}
 		:
-		constdeclaration (typedeclaration)? (vardeclaration)? proceduredeclarations { $lines.addAll($constdeclaration.lines); }
-		| typedeclaration { $lines.add($typedeclaration.text); }
-		| vardeclaration {$lines.add($vardeclaration.text); }
-		| proceduredeclarations { $lines.addAll($proceduredeclarations.lines); };
+		( constdeclaration { $lines.addAll($constdeclaration.lines);} ) ?
+		( typedeclaration { $lines.addAll($typedeclaration.lines); } ) ?
+		( vardeclaration {$lines.addAll($vardeclaration.lines); } ) ?
+		proceduredeclarations { $lines.addAll($proceduredeclarations.lines); } ;
 
 constdeclaration returns [ArrayList<String> lines]
-                @init { $lines = new ArrayList<String>();} 
-		: 'const' (constassignment {$lines.add($constassignment.text);})*;
+                @init { $lines = new ArrayList<String>(); $lines.add("const");} 
+		: 'const' (SPACE)? (constassignment (SPACE)?{
+			$lines.add("\t" + $constassignment.text);
+		})*;
 
-constassignment : IDENT '=' expression ';';
+constassignment : IDENT (SPACE)? '=' (SPACE)? expression (SPACE)? ';';
 
-typedeclaration : 'type' (typeassignment)*;
+typedeclaration returns [ArrayList<String> lines]
+                @init { $lines = new ArrayList<String>(); $lines.add("type");}
+		: 'type' (SPACE)? (typeassignment (SPACE)? {
+			ArrayList<String> lines = $typeassignment.lines;
+			for (int i = 0; i < lines.size(); i++) {
+                                lines.set(i, "\t" + lines.get(i));
+                        }
+			$lines.addAll(lines);
+			})*;
 
-typeassignment : IDENT '=' type ';';
+typeassignment returns [ArrayList<String> lines]
+                @init { $lines = new ArrayList<String>();}
+		: IDENT (SPACE)? '=' (SPACE)? type (SPACE)? ';'{
+			if ($type.lines.size() > 1){
+				$lines.add($IDENT.text + " =");
+				ArrayList<String> lines = $type.lines;
+				for (int i = 0; i < lines.size(); i++) {
+                                	lines.set(i, "\t" + lines.get(i));
+                        	}
+				$lines.addAll(lines);
+			}
+			else{
+				$lines.add($IDENT.text + " = " + $type.lines.get(0));
+			}
+		};
 
-vardeclaration : 'var' (varassignment)*;
+vardeclaration returns [ArrayList<String> lines]
+                @init { $lines = new ArrayList<String>(); $lines.add("var");} 
+		: 'var' (SPACE)? (varassignment (SPACE)?{
+			$lines.add("\t" + $varassignment.text)
+		;})*;
 
-varassignment : identlist ':' type ';';
+varassignment : identlist (SPACE)? ':' (SPACE)? type (SPACE)? ';';
 
 proceduredeclarations returns [ArrayList<String> lines]
                 @init { $lines = new ArrayList<String>();}
-		: (proceduredeclaration ';' {$lines.addAll($proceduredeclaration.lines);})*;
+		: ((SPACE)? proceduredeclaration (SPACE)? ';' (SPACE)? {$lines.addAll($proceduredeclaration.lines);})*;
 
 proceduredeclaration returns [ArrayList<String> lines]
 		@init { $lines = new ArrayList<String>();} 
-		: 'procedure' IDENT ';' declarations compoundstatement 
+		: procedureheader (SPACE)? declarations (SPACE)? compoundstatement 
 		{
-                	$lines.add("procedure");
-                        $lines.add($IDENT.text);
-                        $lines.add(";");
-                        $lines.addAll($declarations.lines);
+                	$lines.add($procedureheader.text);
+			ArrayList<String> lines = $declarations.lines;
+			for (int i = 0; i < lines.size(); i++) {
+                                lines.set(i, "\t" + lines.get(i));
+                        }
+                        $lines.addAll(lines);
                         $lines.addAll($compoundstatement.lines);
-		}
-		| 'procedure' IDENT formalparameters ';' declarations compoundstatement
-		{
-			$lines.add("procedure");
-			$lines.add($IDENT.text);
-			$lines.add($formalparameters.text);
-			$lines.add(";");
-			$lines.addAll($declarations.lines);
-			$lines.addAll($compoundstatement.lines);
 		};
 
-formalparameters : '(' (fpsection (';' fpsection)*)? ')';
+procedureheader : 'procedure' (SPACE)? IDENT (SPACE)? formalparameters (SPACE)? ';';
 
-fpsection : ('var')? identlist ':' type;
+formalparameters : '(' (SPACE)? (fpsection (SPACE)?  (';' (SPACE)? fpsection (SPACE)?)*)? (SPACE)? ')';
 
-type : IDENT | arraytype | recordtype;
+fpsection : ('var')? (SPACE)? identlist (SPACE)? ':' (SPACE)? type;
+
+type returns [ArrayList<String> lines]
+		@init { $lines = new ArrayList<String>();}
+		: IDENT { $lines.add($IDENT.text); } 
+		| arraytype {
+			ArrayList<String> lines = $arraytype.lines;
+			for (int i = 0; i < lines.size(); i++) {
+                                lines.set(i, "\t" + lines.get(i));
+                        }
+			$lines.addAll(lines);} 
+		| recordtype{
+			ArrayList<String> lines = $recordtype.lines;
+                        for (int i = 0; i < lines.size(); i++) {
+                                lines.set(i, "\t" + lines.get(i));
+                        }
+			$lines.addAll(lines);};
 
 recordtype returns [ArrayList<String> lines]
 	@init { $lines = new ArrayList<String>();} 
-	: 'record' fieldlists 'end'
+	: 'record' (SPACE)? fieldlist (SPACE)? 'end'
 		{
 			$lines.add("record");
-			$lines.addAll($fieldlists.lines);
+			$lines.add("\t" + $fieldlist.text);
 			$lines.add("end");
-                };
+                }
+	| 'record' (SPACE)? terminatedfieldlists (SPACE)? fieldlist (SPACE)? 'end'
+		{
+			$lines.add("record");
+                        ArrayList<String> lines = $terminatedfieldlists.lines;
+                        for (int i = 0; i < lines.size(); i++) {
+                                lines.set(i, "\t" + lines.get(i));
+                        }
+                        $lines.addAll(lines);
+			$lines.add("\t" + $fieldlist.text);
+                        $lines.add("end");
+		};
 
-fieldlists returns [ArrayList<String> lines]
-        @init { $lines = new ArrayList<String>();}
-        : (';' fieldlist {$lines.add($fieldlist.text);})* ;
+terminatedfieldlists returns [ArrayList<String> lines]
+                @init { $lines = new ArrayList<String>();}
+                : (fieldlist (SPACE)? ';' (SPACE)? {$lines.add($fieldlist.text + ';');})*;
 
-fieldlist : (identlist ':' type)?;
+fieldlist : (identlist (SPACE)? ':' (SPACE)? type)?;
 
-arraytype : 'array' '[' expression '..' expression ']' 'of' type;
+arraytype returns [ArrayList<String> lines]
+	@init { $lines = new ArrayList<String>();}
+	: arraydeclaration (SPACE)? type
+	{
+		if ($type.lines.size() > 1){
+			$lines.add($arraydeclaration.text);
+			ArrayList<String> lines = $type.lines;
+			for (int i = 0; i < lines.size(); i++) {
+                                lines.set(i, "\t" + lines.get(i));
+                        }
+                        $lines.addAll(lines);
+		}
+		else{
+			$lines.add($arraydeclaration.text + $type.lines.get(0)); 
+		}
+	};
 
-identlist : IDENT (',' IDENT)*;
+arraydeclaration : 'array' (SPACE)? '[' (SPACE)? expression (SPACE)? '..' (SPACE)? expression (SPACE)? ']' (SPACE)? 'of'; 
+
+
+identlist : IDENT (SPACE)? (',' (SPACE)? IDENT (SPACE)?)*;
 
 statement returns [ArrayList<String> lines]
 		@init { $lines = new ArrayList<String>();}
@@ -94,71 +165,100 @@ statement returns [ArrayList<String> lines]
 
 whilestatement returns [ArrayList<String> lines]
 		@init { $lines = new ArrayList<String>();}
-		: 'while' expression 'do' statement
+		: whileheader (SPACE)? statement
 		{
-			$lines.add("while");
-			$lines.add($expression.text);
-			$lines.add("do");
-			$lines.addAll($statement.lines);
+			$lines.add($whileheader.text);
+			ArrayList<String> lines = $statement.lines;
+			for (int i = 0; i < lines.size(); i++) {
+				lines.set(i, "\t" + lines.get(i));
+                        }
+			$lines.addAll(lines);
                 };
+
+whileheader : 'while' (SPACE)?  expression (SPACE)? 'do' (SPACE)?;
 
 ifstatement returns [ArrayList<String> lines] 
 		@init { $lines = new ArrayList<String>();}
-		: 'if' expression 'then' statement {
-			$lines.add("if");
-			$lines.add($expression.text);
-			$lines.add("then");
-			$lines.addAll($statement.lines);
+		: ifheader (SPACE)? statement {
+			$lines.add($ifheader.text);
+			ArrayList<String> lines = $statement.lines;
+			for (int i = 0; i < lines.size(); i++) {
+                                lines.set(i, "\t" + lines.get(i));
+                        }
+			$lines.addAll(lines);
 		}
-		| 'if' expression 'then' statement elsestatement {
-			$lines.add("if");
-               		$lines.add($expression.text);
-                	$lines.add("then");
-                	$lines.addAll($statement.lines);
-			$lines.add("else");
+		| ifheader (SPACE)? statement (SPACE)? elsestatement {
+			$lines.add($ifheader.text);
+			ArrayList<String> lines = $statement.lines;
+                	for (int i = 0; i < lines.size(); i++) {
+                        	lines.set(i, "\t" + lines.get(i));
+                        }
+			$lines.addAll(lines);
 			$lines.addAll($elsestatement.lines);
 		}; 
 
+ifheader : 'if' (SPACE)? expression (SPACE)? 'then';
+
 elsestatement returns [ArrayList<String> lines]
 		 @init { $lines = new ArrayList<String>();}
-		: 'else' statement
+		: 'else' (SPACE)? statement
 		{
 			$lines.add("else");
-			$lines.addAll($statement.lines);
+			ArrayList<String> lines = $statement.lines;
+			for (int i = 0; i < lines.size(); i++) {
+                                lines.set(i, "\t" + lines.get(i));
+                        }
+                        $lines.addAll(lines);
 		};
 
 
 
 compoundstatement returns [ArrayList<String> lines]
 		@init { $lines = new ArrayList<String>();}
-		: 'begin' statement statements 'end'
+		: 'begin' (SPACE)? statement (SPACE)? 'end'
 		{
 			$lines.add("begin");
+			ArrayList<String> lines = $statement.lines;
+			for (int i = 0; i < lines.size(); i++) {
+                                lines.set(i, "\t" + lines.get(i));
+                        }
+                        $lines.addAll(lines);
+                        $lines.add("end");
+                }
+		| 'begin' (SPACE)? terminatedstatements (SPACE)? statement (SPACE)? 'end'
+		{
+			$lines.add("begin");
+			ArrayList<String> lines = $terminatedstatements.lines;
+			lines.addAll($statement.lines);
+			for (int i = 0; i < lines.size(); i++) {
+                                lines.set(i, "\t" + lines.get(i));
+                        }
+			$lines.addAll(lines);
+			$lines.add("end");
+		};
+
+terminatedstatements returns [ArrayList<String> lines]
+                @init { $lines = new ArrayList<String>();}
+                : (statement (SPACE)? ';' (SPACE)? {
 			$lines.addAll($statement.lines);
-			$lines.addAll($statements.lines);
-			$lines.add("end");	
-                };
+			$lines.set($lines.size() - 1, $lines.get($lines.size() - 1) + ";");
+		})*;
 
-statements returns [ArrayList<String> lines] 
-	@init { $lines = new ArrayList<String>();}  
-	: (';' statement {$lines.addAll($statement.lines);})* ;
+procedurecall : IDENT (SPACE)? selector (SPACE)? (actualparameters)?;
 
+actualparameters : '(' (SPACE)? (expression (SPACE)? (',' (SPACE)? expression (SPACE)?)*)? (SPACE)? ')';
 
-procedurecall : IDENT selector (actualparameters)?;
+assignment : IDENT (SPACE)? selector (SPACE)? ':=' (SPACE)? expression;
 
-actualparameters : '(' (expression (',' expression)*)? ')';
+expression : simpleexpression (SPACE)? (('=' | '<>' | '<' | '<=' | '>' | '>=') (SPACE)? simpleexpression (SPACE)?)*;
 
-assignment : IDENT selector ':=' expression;
+simpleexpression : ('+' | '-')? (SPACE)? term (SPACE)? (('+' | '-' | 'or') (SPACE)? term (SPACE)?)*;
 
-expression : simpleexpression (('=' | '<>' | '<' | '<=' | '>' | '>=') simpleexpression)*;
+term : factor (SPACE)? (('*' | 'div' | 'mod' | 'and') (SPACE)? factor (SPACE)?)*;
 
-simpleexpression : ('+' | '-')? term (('+' | '-' | 'or') term)*;
+factor : IDENT (SPACE)? selector | INTEGER | '(' (SPACE)? expression (SPACE)? ')' | 'not' (SPACE)? factor;
 
-term : factor (('*' | 'div' | 'mod' | 'and') factor)*;
-
-factor : IDENT selector | INTEGER | '(' expression ')' | 'not' factor;
-
-selector : ('.' IDENT | '[' expression ']')*;
+selector : ('.' (SPACE)? IDENT | '[' (SPACE)? expression (SPACE)? ']' (SPACE)?)*;
 
 INTEGER : DIGIT (DIGIT)*;
 
@@ -168,5 +268,7 @@ DIGIT : '0'..'9';
 
 LETTER : 'a' .. 'z' | 'A' .. 'Z';
 
-WS : [ \t\r\n]+ -> skip;
+SPACE : [ ]+;
+
+WS : [\t\r\n]+ -> skip;
 
