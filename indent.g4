@@ -2,7 +2,7 @@ grammar indent;
 
 r: program;
 
-program :  programheader declarations (SPACE)? compoundstatement 
+program :  programheader (SPACE)? declarations (SPACE)? compoundstatement 
 		{
 			// indent declarations
 			System.out.println($programheader.text);
@@ -10,6 +10,8 @@ program :  programheader declarations (SPACE)? compoundstatement
 			for (int i = 0; i < lines.size(); i++) {
 				lines.set(i, "\t" + lines.get(i));
 			}
+
+			// print compound statements without indentation
 			lines.addAll($compoundstatement.lines);
 			for (int i = 0; i < lines.size(); i++) {
 				System.out.println(lines.get(i));
@@ -175,7 +177,7 @@ whilestatement returns [ArrayList<String> lines]
 			$lines.addAll(lines);
                 };
 
-whileheader : 'while' (SPACE)?  expression (SPACE)? 'do' (SPACE)?;
+whileheader : 'while' (SPACE)?  expression (SPACE)? 'do';
 
 ifstatement returns [ArrayList<String> lines] 
 		@init { $lines = new ArrayList<String>();}
@@ -271,4 +273,3 @@ LETTER : 'a' .. 'z' | 'A' .. 'Z';
 SPACE : [ ]+;
 
 WS : [\t\r\n]+ -> skip;
-
