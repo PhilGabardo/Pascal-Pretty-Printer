@@ -1,4 +1,4 @@
-# Pascal-Pretty-Printer
+# Pascal-Pretty-Printer (Credit to Emil Sekerinski)
 
 This is an antlr program that "pretty prints" or "beautifies" Pascal0 source code. Consider the following grammar for Pascal0, written in Wirth-style EBNF:
 ```
@@ -25,7 +25,7 @@ declarations = ["const" {ident "=" expression ";"}]["type" {ident "=" type ";"}]
 program = "program" ident ";"declarations CompoundStatement.
 ```
 
-The beautifier reads a Pascal0 program from standard inputand writes the same program to standard output, but with systematic indentation of the control structures and declarations. That is, bracketed constructs like begin-end and if-then-else should be indented in a readable way:
+The beautifier reads a Pascal0 program from standard input and writes the same program to standard output, but with systematic indentation of the control structures and declarations. That is, bracketed constructs like begin-end and if-then-else should be indented in a readable way:
 * Expressions are assumed to fit on one line and are output without reformatting.
 * Statements, declarations, and types may go over several lines and need to be broken and indented. All statements start a new line. 
 * Assignments and procedure calls are assumed to fit on one line.  
