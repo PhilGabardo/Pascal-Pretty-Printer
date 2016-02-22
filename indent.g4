@@ -264,7 +264,7 @@ selector : ('.' (SPACE)? IDENT | '[' (SPACE)? expression (SPACE)? ']' (SPACE)?)*
 
 INTEGER : DIGIT (DIGIT)*;
 
-IDENT : LETTER (LETTER | DIGIT)*;
+IDENT : LETTER (LETTER | DIGIT);
 
 DIGIT : '0'..'9';
 
