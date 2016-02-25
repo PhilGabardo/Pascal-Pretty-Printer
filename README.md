@@ -32,7 +32,7 @@ The beautifier reads a Pascal0 program from standard input and writes the same p
 
 Consider the following Pascal0 code that is poorly formatted:
 ```
-rogram testindent;
+program testindent;
 const c = 44; type t = integer; var s,i,j,a,b,d: t;
 r : record x, y: integer; b,c :boolean; a : array [1.. 100] of t end;
 procedure p(var g: t); type
@@ -94,5 +94,5 @@ You must have ANTLR (version 4) installed to run this program (see https://githu
 ```
 antlr4 indent.g4
 javac *.java
-grun indent r <YOUR_PASCAL_0_CODE>
+grun indent r <YOUR_PASCAL0_CODE>
 ```
