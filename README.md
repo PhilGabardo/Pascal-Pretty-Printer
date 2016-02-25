@@ -2,7 +2,7 @@
 
 This is an antlr program that "pretty prints" or "beautifies" Pascal0 source code. Consider the following grammar for Pascal0, written in Wirth-style EBNF:
 ```
-ident = letter (letter | digit).
+ident = letter {letter | digit}.
 integer = digit {digit}.
 selector = {"." ident | "[" expression "]"}.
 factor = ident selector | integer | "(" expression ")" | "not" factor.
