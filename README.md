@@ -25,10 +25,74 @@ declarations = ["const" {ident "=" expression ";"}]["type" {ident "=" type ";"}]
 program = "program" ident ";"declarations CompoundStatement.
 ```
 
-The beautifier reads a Pascal0 program from standard input and writes the same program to standard output, but with systematic indentation of the control structures and declarations. That is, bracketed constructs like begin-end and if-then-else should be indented in a readable way:
-* Expressions are assumed to fit on one line and are output without reformatting.
-* Statements, declarations, and types may go over several lines and need to be broken and indented. All statements start a new line. 
-* Assignments and procedure calls are assumed to fit on one line.  
-* Each constant, type, variable declaration starts a new line.
-* Type alias declarations are assumed to fit on one line, array and record declarations start a new line; each new field declaration starts a new line.
-* The program header is not indented, the main program declarations are indented once,the main program body is not indented:program headers are not indented, local declarations are indented once, the procedure body is not indented.
+The beautifier reads a Pascal0 program from standard input and writes the same program to standard output, but with systematic indentation of the control structures and declarations. That is, bracketed constructs like begin-end and if-then-else are indented in a readable way, and whitespace is inserted between text to make the program readable.
+
+
+## Example
+
+Consider the following Pascal0 code that is poorly formatted:
+```
+rogram testindent;
+const c = 44; type t = integer; var s,i,j,a,b,d: t;
+r : record x, y: integer; b,c :boolean; a : array [1.. 100] of t end;
+procedure p(var g: t); type
+  q = array [20 .. 30] of array [-12 .. 67] of t;
+  begin i := 3; if a = a then i := j + 1 else if
+    b = a then j := 99
+ end;
+
+begin while d < 9 do p(i); if a = 99 then begin j := 100 end;
+begin i := 100 end end.
+```
+
+This program will generate the following code given the poorly formatted code above:
+
+```
+program testindent;
+  const
+    c = 44;
+  type
+    t = integer;
+  var
+    s, i, j, a, b, d: t;
+    r:
+      record
+        x, y: integer;
+        b, c: boolean;
+        a:
+          array [1 .. 100] of t
+      end;
+  procedure p(var g: t);
+    type
+      q =
+        array [20 .. 30] of
+          array [-12 .. 67] of t;
+  begin
+    i := 3;
+    if a = a then
+      i := j + 1
+    else
+      if b = a then
+        j := 99
+  end;
+begin
+  while d < 9 do
+    p(i);
+  if a = 99 then
+    begin
+      j := 100
+    end;
+  begin
+    i := 100
+  end
+end.
+```
+
+## Building and running
+You must have ANTLR (version 4) installed to run this program (see https://github.com/antlr/antlr4/blob/master/doc/getting-started.md). To build the program run:
+
+```
+antlr4 indent.g4
+javac *.java
+grun indent r <YOUR_PASCAL_0_CODE>
+```
