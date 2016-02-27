@@ -94,5 +94,5 @@ You must have ANTLR (version 4) installed to run this program (see https://githu
 ```
 antlr4 indent.g4
 javac *.java
-grun indent r <YOUR_PASCAL0_CODE>
+grun indent r <YOUR_PASCAL0_PROGRAM>
 ```
